@@ -17,6 +17,9 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score, roc_curve
 
+# Imblearn library for handling imbalanced datasets
+from imblearn.over_sampling import SMOTE
+
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -129,6 +132,20 @@ X_train_scaled[num_cols] = scaler.fit_transform(X_train[num_cols])
 X_test_scaled[num_cols] = scaler.transform(X_test[num_cols])
 
 # %% [markdown]
+# ## 3.1 Resolving Class Imbalance with SMOTE
+# Telecom churn datasets usually have fewer instances of "Churn = Yes" compared to "Churn = No". 
+# To prevent the model from being biased towards the majority class, we apply SMOTE (Synthetic Minority Over-sampling Technique)
+# to oversample the minority class specifically on the training set.
+
+# %%
+# Apply SMOTE
+smote = SMOTE(random_state=42)
+X_train_resampled, y_train_resampled = smote.fit_resample(X_train_scaled, y_train)
+
+print(f"Original y_train class distribution:\n{y_train.value_counts()}")
+print(f"Resampled y_train class distribution:\n{y_train_resampled.value_counts()}")
+
+# %% [markdown]
 # ## 4. Random Forest Model Training
 
 # %%
@@ -136,11 +153,11 @@ X_test_scaled[num_cols] = scaler.transform(X_test[num_cols])
 # We set class_weight='balanced' to handle the imbalanced nature of churn dataset.
 rf_model = RandomForestClassifier(n_estimators=100, 
                                   random_state=42, 
-                                  class_weight='balanced',
                                   max_depth=10, 
                                   n_jobs=-1)
 
-rf_model.fit(X_train_scaled, y_train)
+# Fit the model on the SMOTE resampled training data
+rf_model.fit(X_train_resampled, y_train_resampled)
 
 # %% [markdown]
 # ## 5. Model Evaluation and Metrics
@@ -221,7 +238,9 @@ plt.show()
 # 
 # **Data Preprocessing & Feature Engineering**: Missing values in `TotalCharges` were pruned since there were very few, and variables were systematically encoded (Label/One-Hot encoding based on class quantity). Numerical variables were scaled. 
 # 
-# **Modeling**: Due to potential data imbalances in the churning target class, `class_weight='balanced'` was utilized. 
+# **Handling Imbalance**: Instead of just using the model's built-in `class_weight` adjustments, we utilized **SMOTE** (Synthetic Minority Over-sampling Technique) to algorithmically duplicate and synthesize new minority class data points, ensuring a perfectly balanced training dataset.
+# 
+# **Modeling**: A Random Forest Classifier was trained on the resampled training subset.
 #
 # **Metrics**: Precision, Recall, Accuracy, F1-Score, and ROC-AUC are calculated to ensure a holistic viewing. Specifically for churn, achieving a higher recall (finding all customers who quit) sometimes holds higher priority than overarching accuracy.
 #
