@@ -104,13 +104,29 @@ X = pd.get_dummies(X, columns=multi_cat_cols, drop_first=True)
 
 print(f"Shape of feature matrix X after encoding: {X.shape}")
 
+# %% [markdown]
+# ## 2.5 Save Processed Dataset
+# To ensure consistency across the group assignment when comparing multiple models (like SVM or Logistic Regression), 
+# we save the perfectly pre-processed (encoded and cleaned, but NOT scaled or SMOTEd) dataset.
+
 # %%
-# Step 2.4: Feature Scaling
+import os
+
+processed_df = X.copy()
+processed_df['Churn'] = y
+
+# Create Dataset directory if it doesn't exist just in case
+if not os.path.exists('../Dataset'):
+    os.makedirs('../Dataset')
+
+save_path = '../Dataset/Processed_Telecom_Churn.csv'
+processed_df.to_csv(save_path, index=False)
+print(f"Successfully saved fully processed dataset to: {save_path}")
+print(f"Processed dataset shape: {processed_df.shape}")
+
+# %%
 # Random Forest does not strictly require feature scaling, but it's good practice 
 # and can help performance when comparing with other models.
-scaler = StandardScaler()
-# Note: we fit the scaler on the train set later to prevent data leakage,
-# but we'll prepare the split first.
 
 # %% [markdown]
 # ## 3. Train-Test Split
@@ -128,6 +144,7 @@ print(f"y_test shape: {y_test.shape}")
 X_train_scaled = X_train.copy()
 X_test_scaled = X_test.copy()
 
+scaler = StandardScaler()
 X_train_scaled[num_cols] = scaler.fit_transform(X_train[num_cols])
 X_test_scaled[num_cols] = scaler.transform(X_test[num_cols])
 
@@ -245,3 +262,5 @@ plt.show()
 # **Metrics**: Precision, Recall, Accuracy, F1-Score, and ROC-AUC are calculated to ensure a holistic viewing. Specifically for churn, achieving a higher recall (finding all customers who quit) sometimes holds higher priority than overarching accuracy.
 #
 # **Hyperparameters**: `max_depth = 10` is used to restrict the growth of individual trees to mitigate overfitting. 
+
+# %%
