@@ -262,5 +262,24 @@ plt.show()
 # **Metrics**: Precision, Recall, Accuracy, F1-Score, and ROC-AUC are calculated to ensure a holistic viewing. Specifically for churn, achieving a higher recall (finding all customers who quit) sometimes holds higher priority than overarching accuracy.
 #
 # **Hyperparameters**: `max_depth = 10` is used to restrict the growth of individual trees to mitigate overfitting. 
+# %% [markdown]
+# ## 7. Export Evaluation Metrics
 
 # %%
+# Create a dictionary of metrics
+metrics_dict = {
+    'Model': ['Random Forest'],
+    'Accuracy': [accuracy],
+    'Precision': [precision],
+    'Recall': [recall],
+    'F1-Score': [f1],
+    'ROC-AUC': [roc_auc]
+}
+
+# Convert to DataFrame
+metrics_df = pd.DataFrame(metrics_dict)
+
+# Save to CSV in the current directory ('Random forest')
+metrics_path = 'random_forest_metrics.csv'
+metrics_df.to_csv(metrics_path, index=False)
+print(f"Evaluation metrics successfully exported to: {metrics_path}")
