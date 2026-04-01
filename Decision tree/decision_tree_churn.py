@@ -14,6 +14,8 @@ import seaborn as sns
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score, roc_curve
 
 # Imblearn library for handling imbalanced datasets
 from imblearn.over_sampling import SMOTE
@@ -92,3 +94,72 @@ print("Decision Tree model trained successfully.")
 # Make predictions on the test set
 y_pred = dt_model.predict(X_test_scaled)
 y_pred_proba = dt_model.predict_proba(X_test_scaled)[:, 1]
+
+# %% [markdown]
+# ## 5. Model Evaluation and Metrics
+
+# %%
+# Calculate classification evaluation metrics
+accuracy = accuracy_score(y_test, y_pred)
+precision = precision_score(y_test, y_pred)
+recall = recall_score(y_test, y_pred)
+f1 = f1_score(y_test, y_pred)
+roc_auc = roc_auc_score(y_test, y_pred_proba)
+
+print("--- Decision Tree Model Performance ---")
+print(f"Accuracy:  {accuracy:.4f}")
+print(f"Precision: {precision:.4f}")
+print(f"Recall:    {recall:.4f}")
+print(f"F1-Score:  {f1:.4f}")
+print(f"ROC-AUC:   {roc_auc:.4f}")
+print("\nClassification Report:\n", classification_report(y_test, y_pred))
+
+# %%
+# Plot Confusion Matrix
+plt.figure(figsize=(8, 6))
+cm = confusion_matrix(y_test, y_pred)
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
+            xticklabels=['Not Churn', 'Churn'], 
+            yticklabels=['Not Churn', 'Churn'])
+plt.title('Confusion Matrix - Decision Tree')
+plt.ylabel('Actual Label')
+plt.xlabel('Predicted Label')
+plt.show()
+
+# %%
+# Plot ROC Curve
+fpr, tpr, thresholds = roc_curve(y_test, y_pred_proba)
+
+plt.figure(figsize=(8, 6))
+plt.plot(fpr, tpr, color='orange', label=f'ROC Curve (AUC = {roc_auc:.4f})')
+plt.plot([0, 1], [0, 1], color='navy', linestyle='--')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Receiver Operating Characteristic (ROC) Curve')
+plt.legend(loc="lower right")
+plt.show()
+
+# %% [markdown]
+# ## 6. Feature Importance
+
+# %%
+# Extract feature importance from the model
+feature_importances = dt_model.feature_importances_
+features = X_train_scaled.columns
+
+# Create a DataFrame for visualization
+importance_df = pd.DataFrame({
+    'Feature': features,
+    'Importance': feature_importances
+}).sort_values(by='Importance', ascending=False)
+
+# Plot top 15 most important features
+plt.figure(figsize=(10, 8))
+sns.barplot(x='Importance', y='Feature', data=importance_df.head(15), palette='viridis')
+plt.title('Top 15 Most Important Features - Decision Tree')
+plt.xlabel('Importance')
+plt.ylabel('Feature')
+plt.tight_layout()
+plt.show()
