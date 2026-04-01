@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # Sklearn libraries for preprocessing and modeling
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
@@ -80,16 +80,32 @@ print(f"Original y_train class distribution:\n{y_train.value_counts()}")
 print(f"Resampled y_train class distribution:\n{y_train_resampled.value_counts()}")
 
 # %% [markdown]
-# ## 4. Decision Tree Model Training
+# ## 4. Decision Tree Model Training with GridSearchCV
 
 # %%
-# Train a Decision Tree Classifier
-# We set random_state for reproducibility and max_depth to prevent overfitting
-dt_model = DecisionTreeClassifier(random_state=42, max_depth=8, criterion='gini')
+# Define the parameter grid
+param_grid = {
+    'criterion': ['gini', 'entropy'],
+    'max_depth': [None, 5, 8, 10, 15, 20],
+    'min_samples_split': [2, 5, 10, 20],
+    'min_samples_leaf': [1, 2, 5, 10]
+}
 
-# Fit the model on the SMOTE resampled training data
-dt_model.fit(X_train_resampled, y_train_resampled)
-print("Decision Tree model trained successfully.")
+# Initialize a basic Decision Tree Classifier
+base_dt = DecisionTreeClassifier(random_state=42)
+
+# Set up GridSearchCV
+grid_search = GridSearchCV(estimator=base_dt, param_grid=param_grid, 
+                           cv=5, n_jobs=-1, scoring='accuracy')
+
+# Fit GridSearchCV on the SMOTE resampled training data
+print("Running GridSearchCV to find optimal hyperparameters...")
+grid_search.fit(X_train_resampled, y_train_resampled)
+
+# Extract best model
+print(f"Best parameters found: {grid_search.best_params_}")
+dt_model = grid_search.best_estimator_
+print("Decision Tree model tuned and trained successfully.")
 
 # Make predictions on the test set
 y_pred = dt_model.predict(X_test_scaled)
@@ -163,3 +179,21 @@ plt.xlabel('Importance')
 plt.ylabel('Feature')
 plt.tight_layout()
 plt.show()
+
+# %% [markdown]
+# ## 7. Export Evaluation Metrics
+
+# %%
+# Export the evaluation metrics to a CSV file
+metrics_df = pd.DataFrame([{
+    'Model': 'Decision Tree (GridSearchCV Tuned)',
+    'Accuracy': accuracy,
+    'Precision': precision,
+    'Recall': recall,
+    'F1-Score': f1,
+    'ROC-AUC': roc_auc
+}])
+
+metrics_csv_path = 'decision_tree_metrics.csv'
+metrics_df.to_csv(metrics_csv_path, index=False)
+print(f"Evaluation metrics successfully exported to {metrics_csv_path}")
