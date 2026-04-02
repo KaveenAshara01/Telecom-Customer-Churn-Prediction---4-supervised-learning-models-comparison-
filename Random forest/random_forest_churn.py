@@ -28,8 +28,7 @@ warnings.filterwarnings('ignore')
 
 # %%
 # Load the dataset
-# Assuming the Jupyter notebook is running from the 'Random forest' directory
-# and the dataset is located in the '../Dataset' directory.
+
 data_path = '../Dataset/Raw.csv'
 try:
     df = pd.read_csv(data_path)
